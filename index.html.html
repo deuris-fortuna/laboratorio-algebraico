@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Laboratorio Algebraico</title>
+
+<style>
+body{
+  font-family: Arial, sans-serif;
+  background:#edf2f7;
+}
+.container{
+  max-width:900px;
+  margin:auto;
+  background:white;
+  padding:25px;
+  border-radius:12px;
+  box-shadow:0 0 15px rgba(0,0,0,.15);
+}
+h1,h2{text-align:center;}
+.hidden{display:none;}
+input,select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+}
+button{
+  padding:10px 20px;
+  font-size:16px;
+  cursor:pointer;
+}
+.option{
+  border:1px solid #ccc;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  cursor:pointer;
+}
+.option:hover{
+  background:#e0ebff;
+}
+.timer{
+  text-align:right;
+  font-weight:bold;
+  color:#c00000;
+}
+.cert{
+  border:3px double black;
+  padding:20px;
+  margin-top:20px;
+}
+
+/* Agrega esto dentro de <style> */
+.fraction { 
+  display: inline-flex; 
+  flex-direction: column; 
+  vertical-align: middle; 
+  text-align: center; 
+  font-size: 0.85em; 
+  margin: 0 0.2em; 
+}
+.fdn { 
+  border-top: 1px solid black; 
+  padding-top: 1px; 
+}
+.radical { 
+  border-top: 1px solid black; 
+  padding: 0 2px; 
+  margin-left: -2px; 
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h1>🧪 LABORATORIO ALGEBRAICO</h1>
+
+<!-- REGISTRO -->
+<div id="login">
+  <h2>Registro del Estudiante</h2>
+  <input id="school" placeholder="Centro educativo">
+  <input id="studentName" placeholder="Nombre del estudiante">
+  <input id="grade" placeholder="Curso / Sección">
+
+  <select id="unit">
+    <option value="">Seleccione unidad</option>
+    <option value="intro">Introducción al Álgebra</option>
+    <option value="exp">Expresiones algebraicas</option>
+    <option value="terms">Término algebraico</option>
+    <option value="like">Términos semejantes</option>
+    <option value="value">Valor numérico</option>
+    <option value="lang">Lenguaje algebraico</option>
+    <option value="poly">Operaciones con polinomios</option>
+  </select>
+
+  <select id="level">
+    <option value="">Nivel</option>
+    <option value="easy">Fácil</option>
+    <option value="mid">Intermedio</option>
+    <option value="hard">Difícil</option>
+  </select>
+
+  <button onclick="start()">Iniciar evaluación</button>
+</div>
+
+<!-- EXAMEN -->
+<div id="exam" class="hidden">
+  <div class="timer" id="timer"></div>
+  <h2 id="question"></h2>
+  <div id="options"></div>
+</div>
+
+<!-- RESULTADO -->
+<div id="result" class="hidden">
+  <h2>📊 REPORTE FINAL</h2>
+  <p id="report"></p>
+
+  <div class="cert">
+    <h2>📜 CERTIFICADO</h2>
+    <p>Centro educativo:</p>
+    <strong id="certSchool"></strong>
+    <p>Se certifica que:</p>
+    <h3 id="certName"></h3>
+    <p>Ha completado el</p>
+    <strong>LABORATORIO ALGEBRAICO</strong>
+    <p>Unidad evaluada: <span id="certUnit"></span></p>
+    <p>Nivel: <span id="certLevel"></span></p>
+    <p>Calificación: <span id="certScore"></span></p>
+    <p>Observación: <span id="certObs"></span></p>
+    <p>Fecha: <span id="certDate"></span></p>
+  </div>
+
+  <button onclick="window.print()">Imprimir / Guardar PDF</button>
+</div>
+</div>
+
+<script>
+// REFERENCIAS
+const school = document.getElementById("school");
+const studentName = document.getElementById("studentName");
+const grade = document.getElementById("grade");
+const unit = document.getElementById("unit");
+const level = document.getElementById("level");
+const login = document.getElementById("login");
+const exam = document.getElementById("exam");
+const result = document.getElementById("result");
+const question = document.getElementById("question");
+const options = document.getElementById("options");
+const report = document.getElementById("report");
+const certSchool = document.getElementById("certSchool");
+const certName = document.getElementById("certName");
+const certUnit = document.getElementById("certUnit");
+const certLevel = document.getElementById("certLevel");
+const certScore = document.getElementById("certScore");
+const certObs = document.getElementById("certObs");
+const certDate = document.getElementById("certDate");
+const timerDiv = document.getElementById("timer");
+
+// BANCO DE PREGUNTAS (TODAS LAS UNIDADES)
+const bank = {
+ intro:{easy:[{q:"¿Qué estudia el álgebra?",a:["Relaciones entre cantidades","Figuras","Medidas","Ángulos"],c:0},{q:"Una letra representa:",a:["Un número","Una figura","Una suma","Una resta"],c:0},{q:"x es:",a:["Variable","Constante","Resultado","Operación"],c:0},{q:"El álgebra usa:",a:["Letras y números","Solo números","Gráficos","Figuras"],c:0},{q:"Sirve para:",a:["Resolver problemas","Dibujar","Medir","Contar"],c:0}],
+ mid:[{q:"¿Cuál es expresión?",a:["2x+3","7","√9","5=5"],c:0},{q:"Una variable puede:",a:["Cambiar","Ser fija","No variar","Ser negativa"],c:0},{q:"Contiene variable:",a:["5x","8","6","10"],c:0},{q:"Número que acompaña letra:",a:["Coeficiente","Exponente","Constante","Resultado"],c:0},{q:"x+4 es:",a:["Expresión","Ecuación","Resultado","Producto"],c:0}],
+ hard:[{q:"Relación algebraica:",a:["2x+y","7","5","√16"],c:0},{q:"Una variable toma:",a:["Muchos valores","Uno","Solo positivos","Solo enteros"],c:0},{q:"NO algebraica:",a:["8","3x","x+1","2y"],c:0},{q:"Generaliza:",a:["Aritmética","Geometría","Estadística","Lógica"],c:0},{q:"Letra representa:",a:["Cantidad desconocida","Resultado","Operación","Unidad"],c:0}]},
+
+ exp:{easy:[{q:"¿Expresión?",a:["3x+2","5=2","9","√4"],c:0},{q:"NO tiene:",a:["Signo igual","Variables","Números","Operaciones"],c:0},{q:"2x es:",a:["Expresión","Ecuación","Constante","Resultado"],c:0},{q:"Con letra:",a:["4y","8","6","10"],c:0},{q:"x+1 es:",a:["Expresión","Número","Ecuación","Resultado"],c:0}],
+ mid:[{q:"3x+5 es:",a:["Expresión","Ecuación","Identidad","Constante"],c:0},{q:"NO expresión:",a:["x=3","2x","y+1","5a"],c:0},{q:"Término independiente:",a:["5","x","2x","x²"],c:0},{q:"Número sin letra:",a:["Constante","Variable","Coeficiente","Exponente"],c:0},{q:"Términos en 2x+3:",a:["2","1","3","4"],c:0}],
+ hard:[{q:"Expresión algebraica:",a:["5x²+2x+1","8=8","√9","10"],c:0},{q:"En 4x+7, 7 es:",a:["Constante","Variable","Coeficiente","Exponente"],c:0},{q:"2a−3b tiene:",a:["2 términos","1","3","4"],c:0},{q:"Se evalúa si:",a:["Conoces la variable","Tiene igual","Es grande","No tiene letras"],c:0},{q:"x²+2x+1 es:",a:["Expresión","Ecuación","Resultado","Producto"],c:0}]},
+
+ terms:{easy:[{q:"Coeficiente en 5x:",a:["5","x","1","0"],c:0},{q:"Variable en 3y²:",a:["y","3","2","y²"],c:0},{q:"Un término tiene:",a:["Número y letra","Solo letra","Solo número","Igual"],c:0},{q:"x es:",a:["Variable","Constante","Coeficiente","Exponente"],c:0},{q:"5 es:",a:["Constante","Variable","Término","Exponente"],c:0}],
+ mid:[{q:"Exponente en 4x²:",a:["2","4","x","8"],c:0},{q:"¿Término?",a:["3x","x+2","5=5","√4"],c:0},{q:"Coeficiente en −2y:",a:["−2","y","2","−y"],c:0},{q:"NO tiene:",a:["Suma","Letra","Número","Signo"],c:0},{q:"x³ es:",a:["Término","Número","Constante","Figura"],c:0}],
+ hard:[{q:"Coeficiente en −5x²y:",a:["−5","x²","y","10"],c:0},{q:"Grado de x³:",a:["3","1","0","6"],c:0},{q:"Término compuesto:",a:["3xy","5","x+1","2=2"],c:0},{q:"Puede ser:",a:["Positivo o negativo","Solo positivo","Solo entero","Solo decimal"],c:0},{q:"Variables en 7a²b:",a:["a y b","7","2","a²"],c:0}]},
+
+ like:{easy:[{q:"Semejantes:",a:["2x y 5x","2x y 2y","x y x²","3y y y²"],c:0},{q:"Tienen:",a:["Mismas letras","Mismo número","Igual signo","Coeficiente"],c:0},{q:"3x y 7x:",a:["Semejantes","Diferentes","Opuestos","Nulos"],c:0},{q:"x y x:",a:["Semejantes","Diferentes","Contrarios","Inequivalentes"],c:0},{q:"5y y −2y:",a:["Semejantes","No","Constantes","Ecuaciones"],c:0}],
+ mid:[{q:"Semejante a 4x²:",a:["7x²","4x","x²y","2x"],c:0},{q:"3a y −5a:",a:["Semejantes","Diferentes","Constantes","Productos"],c:0},{q:"NO semejantes:",a:["x y y","2x y 3x","a² y 5a²","7y y −y"],c:0},{q:"2xy y 5xy:",a:["Semejantes","Diferentes","Contrarios","Constantes"],c:0},{q:"x²y y 3x²y:",a:["Semejantes","Diferentes","Opuestos","Iguales"],c:0}],
+ hard:[{q:"Semejante a −3x²y:",a:["5x²y","3xy²","x²","y"],c:0},{q:"2ab y −7ab:",a:["Semejantes","Diferentes","Constantes","Nulos"],c:0},{q:"x³ y x²:",a:["No semejantes","Semejantes","Iguales","Contrarios"],c:0},{q:"3m²n y 9m²n:",a:["Semejantes","Diferentes","Opuestos","Constantes"],c:0},{q:"Para sumar deben ser:",a:["Semejantes","Iguales","Opuestos","Numéricos"],c:0}]},
+
+ value:{easy:[{q:"x=2, x+3:",a:["5","6","4","7"],c:0},{q:"x=1, 2x:",a:["2","1","3","4"],c:0},{q:"x=3, x+1:",a:["4","3","5","6"],c:0},{q:"y=2, y+5:",a:["7","6","8","9"],c:0},{q:"x=0, 4x:",a:["0","4","1","2"],c:0}],
+ mid:[{q:"x=2, 3x+1:",a:["7","6","5","8"],c:0},{q:"y=4, 2y−3:",a:["5","4","6","7"],c:0},{q:"a=3, a²:",a:["9","6","3","12"],c:0},{q:"x=5, x−2:",a:["3","2","4","5"],c:0},{q:"m=1, 5m+2:",a:["7","5","3","6"],c:0}],
+ hard:[{q:"x=2, x²+3:",a:["7","6","5","8"],c:0},{q:"a=−1, a²:",a:["1","−1","0","2"],c:0},{q:"x=3, 2x²:",a:["18","12","9","6"],c:0},{q:"y=2, y²+2y:",a:["8","6","4","10"],c:0},{q:"x=4, x²−4:",a:["12","16","8","10"],c:0}]},
+
+ lang:{
+ easy:[
+  {q:"El doble de un número es:",a:["2x","x+2","x²","x/2"],c:0},
+  {q:"La suma de un número y 5 es:",a:["x+5","5x","x−5","x²"],c:0},
+  {q:"Un número aumentado en 3 es:",a:["x+3","3x","x−3","x/3"],c:0},
+  {q:"El triple de un número es:",a:["3x","x+3","x²","x/3"],c:0},
+  {q:"Un número disminuido en 2 es:",a:["x−2","2x","x+2","x/2"],c:0}
+ ],
+ mid:[
+  {q:"El doble de un número más 4 es:",a:["2x+4","x+4","4x","x²+4"],c:0},
+  {q:"La mitad de un número es:",a:["x/2","2x","x−2","x²"],c:0},
+  {q:"El cuadrado de un número es:",a:["x²","2x","x+2","x/2"],c:0},
+  {q:"El triple de un número menos 1 es:",a:["3x−1","3x+1","x−1","x+3"],c:0},
+  {q:"Cinco más que un número es:",a:["x+5","5x","x−5","x²"],c:0}
+ ],
+ hard:[
+  {q:"El cuadrado de un número menos el doble es:",a:["x²−2x","2x²","x²+2x","x(x−2)"],c:0},
+  {q:"La suma de dos números consecutivos es:",a:["x+(x+1)","2x","x²+1","x+1"],c:0},
+  {q:"El triple del cuadrado de un número es:",a:["3x²","(3x)²","x³","x²+3"],c:0},
+  {q:"La diferencia entre un número y su cuadrado es:",a:["x−x²","x²−x","2x","x²"],c:0},
+  {q:"El producto de un número por sí mismo es:",a:["x·x","2x","x+1","x−1"],c:0}
+ ]
+},
+
+poly:{
+ easy:[
+  {q:"¿Cuántos términos tiene x^3 +5x- 7?",a:["2","1","3","4"],c:2},
+  {q:"-3x + x =",a:["-2x","-2x²","2x","4x"],c:0},
+  {q:"2x + 3x =",a:["6x","5x", "x²","3x"],c:1},
+  {q:"Un polinomio es:",a:["Una ecuación","Un número","Una raíz", "Suma de términos"],c:3},
+  {q:"3y − y =",a:["2y","3y","y²","0"],c:0}
+ ],
+ mid:[
+  {q:"(5x+2)+(x+3) =",a:["6x+5","6x+1","5x+6","6x²+5"],c:0},
+  {q:"(-3x +6x² +9)-(10x² +3x +8) =",a:["13x² +9x 17","16x² +17","3x²","-4x² -6x +1"],c:3},
+  {q:"Un binomio tiene:",a:["3", "2 términos", "1","4"],c:1},
+  {q:"(x+1)(x²+2x+1) =", a:["x³+2x²+2x+1","x³+x²+2x+1", "x³+3x²+3x+1", "x³+3x²+2x+1"],a:["2x²","x⁴","x²","x³"],c:2},
+  {q:"(x²+3x+2) ÷ (x+1) =", a:["x+2","x+1","x²+2","x−2"],c:0}
+ ],
+ hard:[
+    {q: `(<div class="fraction"><span>1</span><span class="fdn">2</span></div>x² + √<span class="radical">2</span>x - 3) + (<div class="fraction"><span>3</span><span class="fdn">4</span></div>x² - √<span class="radical">2</span>x + 1) =`,
+     a: [`<div class="fraction"><span>1</span><span class="fdn">4</span></div>x² - 2`, `<div class="fraction"><span>5</span><span class="fdn">4</span></div>x² - 2`, `<div class="fraction"><span>5</span><span class="fdn">4</span></div>x² + 2`, `<div class="fraction"><span>1</span><span class="fdn">4</span></div>x² + 2`], c: 1},
+    {q: `(<div class="fraction"><span>5</span><span class="fdn">3</span></div>x² - √<span class="radical">3</span>x + 4) - (<div class="fraction"><span>2</span><span class="fdn">3</span></div>x² + √<span class="radical">3</span>x - 1) =`,
+     a: ["x² + 5", "3x² - 2√3 x", `x² - 2√<span class="radical">3</span>x + 5`,  "x² - √3 x + 3"], c: 2},
+    {q: "(2x³ + 5x² - 3x - 6) ÷ (x + 3) =",
+     a: ["2x² + x - 2", "2x² - 2", "x² - x - 2", "2x² - x - 2"], c: 3},
+    {q: `(x³ - <div class="fraction"><span>1</span><span class="fdn">4</span></div>x² - x + <div class="fraction"><span>1</span><span class="fdn">4</span></div>) ÷ (x - <div class="fraction"><span>1</span><span class="fdn">2</span></div>) =`,
+     a: [`x² + <div class="fraction"><span>1</span><span class="fdn">4</span></div>`,`x² - <div class="fraction"><span>1</span><span class="fdn">4</span></div>`, `x²- x + <div class="fraction"><span>1</span><span class="fdn">4</span></div>`,  `x²- x - <div class="fraction"><span>1</span><span class="fdn">4</span></div>`], c: 1},
+    {q: `(<div class="fraction"><span>1</span><span class="fdn">2</span></div>x - √<span class="radical">2</span>)(2x + √<span class="radical">2</span>) =`,
+     a: ["x² - 2", "x² + 2", `x² - √<span class="radical">2</span>x - 2`, "x² + √2 x - 2"], c: 0}
+  ]
+ }
+};
+
+let quiz=[],index=0,score=0,time=60,timer;
+
+function start(){
+ if(!school.value||!studentName.value||!grade.value||!unit.value||!level.value){
+  alert("Complete todos los campos");
+  return;
+ }
+ quiz=[...bank[unit.value][level.value]].sort(()=>Math.random()-0.5);
+ login.classList.add("hidden");
+ exam.classList.remove("hidden");
+ load();
+}
+
+function load(){
+ clearInterval(timer);
+ time=90;
+ timer=setInterval(()=>{
+  timerDiv.innerHTML="⏱ Tiempo: "+time+" s";
+  if(time--<=0) next(false);
+ },1000);
+
+ let q=quiz[index];
+ question.innerHTML = (index + 1) + ". " + q.q;
+ options.innerHTML="";
+ q.a.map((t,i)=>({t,i})).sort(()=>Math.random()-0.5).forEach(o=>{
+  let d=document.createElement("div");
+  d.className="option";
+  d.innerHTML = o.t;
+  d.onclick=()=>next(o.i===q.c);
+  options.appendChild(d);
+ });
+}
+
+function next(ok){
+ clearInterval(timer);
+ if(ok) score++;
+ index++;
+ index<quiz.length?load():finish();
+}
+
+function finish(){
+ exam.classList.add("hidden");
+ result.classList.remove("hidden");
+ let pct=Math.round(score/quiz.length*100);
+ let obs=pct>=85?"Excelente dominio":pct>=70?"Buen desempeño":"Requiere refuerzo";
+ report.innerHTML=`Preguntas: ${quiz.length}<br>Aciertos: ${score}<br>Nota: ${pct}%<br><strong>${obs}</strong>`;
+ certSchool.innerText=school.value;
+ certName.innerText=studentName.value+" ("+grade.value+")";
+ certUnit.innerText=unit.options[unit.selectedIndex].text;
+ certLevel.innerText=level.options[level.selectedIndex].text;
+ certScore.innerText=pct+"%";
+ certObs.innerText=obs;
+ certDate.innerText=new Date().toLocaleDateString();
+}
+</script>
+
+</body>
+</html>
